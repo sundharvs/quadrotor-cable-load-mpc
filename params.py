@@ -1,4 +1,5 @@
 import casadi as ca
+import numpy as np
 
 # Geometry
 dx0 = 0.19  # X distance of first rotor  (m)
@@ -35,11 +36,14 @@ tolerance = 0.1
 # Plot?
 plot = True 
 
-initialState = ca.DM([-0.01, 0, -0.3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+initialState = np.array([-0.01, 0, -0.3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+# initialStateDCM = np.array([-0.01, 0, -0.3, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
 
 # sets initial load position to be l (cable length) away from quadrotor
-if ca.norm_2(initialState[0:3]) != 0:
-    initialState[0:3] = l*initialState[0:3] / ca.norm_2(initialState[0:3])
+if np.linalg.norm(initialState[0:3]) != 0:
+    initialState[0:3] = l*initialState[0:3] / np.linalg.norm(initialState[0:3])
+
 
 # q (unit vector between quadrotor and load) initial condition
 initialState[13:16] = (initialState[0:3] - [0,0,0]) / l
