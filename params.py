@@ -21,7 +21,7 @@ J = ca.DM([0.0033, 0.0033, 0.0033])
 maxThrust = 5  # maximum thrust (N)
 minThrust = 0  # minimum thrust (N)
 mL = 0.05  # mass of payload (kg)
-l = 0.3  # length of cable [m]
+l = 1.5  # length of cable [m]
 
 # MPC Parameters
 Q = 40*ca.DM_eye(3) 

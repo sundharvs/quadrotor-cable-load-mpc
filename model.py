@@ -25,7 +25,7 @@ def export_model() -> AcadosModel:
     # Parsing state vector
     pL = x[0:3] # Load position in inertial frame (m)
     vL = x[3:6] # Load velocity in inertial frame (m/s)
-    quat = x[6:10] # Quadrotor quaternion q_WB mapping from body to inertial
+    quat = x[6:10] # Quadrotor quaternion q_WB mapping from body to inertial xyzw
     omega = x[10:13] # Quadrotor angular velocity in body frame
     q = x[13:16] # Unit vector from quad to load
     d_q = x[16:19] # Derivative of unit vector from quad to load
@@ -62,6 +62,10 @@ def export_model() -> AcadosModel:
     pQ = pL - params.l * q
     vQ = vL - params.l * ca.cross(w,q)
 
+    # model nonlinear constraint (load angle)
+    body_z_negative = -1*DCM[:,2]
+    load_angle = ca.acos(ca.dot(q,body_z_negative)/(ca.norm_2(body_z_negative)*ca.norm_2(q)))
+
     model = AcadosModel()
 
     model.f_impl_expr = f_impl
@@ -72,6 +76,8 @@ def export_model() -> AcadosModel:
     model.name = model_name
     model.cost_y_expr = pQ
     model.cost_y_expr_e = pQ
+    # model.con_h_expr = load_angle
+    # model.con_h_expr_e = load_angle
 
     # store meta information
     # model.x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$v$ [m]', r'$\dot{\theta}$ [rad/s]']
