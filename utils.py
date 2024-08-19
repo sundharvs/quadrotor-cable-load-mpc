@@ -23,7 +23,6 @@ def quat_to_DCM():
         
     quat_to_dcm = ca.Function('quat_to_dcm', [q], [dcm])
     
-    
     return quat_to_dcm
 
 def EP_torqued():

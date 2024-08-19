@@ -1,8 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-def matty_loop(n_loops, circle_velocity, radius, sample_time):
-    circle_center = np.array([5.0, 0.0, -2.5])
+def matty_flip(n_loops, circle_velocity, radius, sample_time):
+    circle_center = np.array([5.0, 0.0, -3.5])
 
     start_phi = np.pi/2 
     end_phi = -(3.0 / 2.0 + 2 * (n_loops - 1)) * np.pi
@@ -19,14 +19,15 @@ def matty_loop(n_loops, circle_velocity, radius, sample_time):
     circle_velocity = np.array([-omega*sin_phi, 0, omega*cos_phi])
     circle_acceleration = np.array([-omega**2.*cos_phi, 0, omega**2.*sin_phi])
 
-    enter_traj = generate_spline_desired_position(p_0, v_0, a_0, circle_traj[:,0], 1*circle_velocity, circle_acceleration, 4.5, sample_time)
-
+    enter_traj = generate_spline_desired_position(p_0, v_0, a_0, circle_traj[:,0], 1.1*circle_velocity, circle_acceleration, 5, sample_time)
 
     p_0 = circle_traj[:,-1]
     v_0 = np.array([-omega*np.sin(end_phi), 0, omega*np.cos(end_phi)])
     a_0 = np.array([-omega**2.*np.cos(end_phi), 0, omega**2.*np.sin(end_phi)])
-    end = np.array([0, 0.0, -1])
-    exit_traj = generate_spline_desired_position(p_0, v_0, a_0, end, np.array([0,0,0]), np.array([0,0,0]), 2, sample_time)
+    end = np.array([0.0, 0.0, -2.0])
+    exit_traj = generate_spline_desired_position(p_0, v_0, a_0, end, np.array([0,0,0]), np.array([0,0,0]), 1, sample_time)
+    exit_traj = exit_traj[:,1:]
+
 
     traj = np.hstack([enter_traj, circle_traj, exit_traj])
 

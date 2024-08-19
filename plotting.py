@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-# from mpl_toolkits.mplot3d import Axes3D
-from scipy.spatial.transform import Rotation as R
 import params
+from utils import quat_to_DCM
+from scipy.io import savemat
 
 def plot(t, X_true, ref_traj):
     """
@@ -11,24 +10,25 @@ def plot(t, X_true, ref_traj):
         t: time values of the discretization
         X_true: array with shape (N_sim, nx)
     """
+
     pL = X_true[0:3,:]
     q = X_true[13:16,:]
     pQ = pL - params.l * q
 
     quat = X_true[6:10,:]
+    DCM = quat_to_DCM()
 
-    x = quat[0,:]
-    y = quat[1,:]
-    z = quat[2,:]
-    w = quat[3,:]
-    R13 = 2*(x*z + y*w)
-    R23 = 2*(y*z - x*w)
-    R33 = 2*(w**2 + z**2) - 1
-    body_z = np.vstack([R13, R23, R33])
+    load_angle = np.zeros(np.size(quat,1))
+    body_z = np.zeros((3,np.size(quat,1)))
+    dcm_hist = np.zeros((9,np.size(quat,1)))
+    for i in range(np.size(quat,1)):
+        dcm = DCM(quat[:,i])
+        dcm_hist[:,i] = np.reshape(dcm,(9,))
+        body_z[:,i] = np.ravel(dcm[:,2])
+        load_angle[i] = np.arccos(np.dot(q[:,i],-1*body_z[:,i])/(np.linalg.norm(-1*body_z[:,i])*np.linalg.norm(q[:,i])))
 
-    load_angle = np.zeros_like(x)
-    for i in range(len(x)):
-        load_angle[i] = np.acos(np.dot(q[:,i],-1*body_z[:,i])/(np.linalg.norm(-1*body_z[:,i])*np.linalg.norm(q[:,i])))
+    anim_traj = np.vstack([pQ, pL, dcm_hist])
+    savemat('trajectory.mat', {'traj': anim_traj})
 
     plt.figure(0)
 
@@ -58,7 +58,7 @@ def plot(t, X_true, ref_traj):
     plt.figure(1)
     plt.plot(pQ[0,:], pQ[2,:], label="actual")
     plt.plot(ref_traj[0,:], ref_traj[2,:], label="reference")
-    plt.quiver(pQ[0,::2], pQ[2,::2], -1*body_z[0,::2], body_z[2,::2])
+    plt.quiver(pQ[0,::2], pQ[2,::2], body_z[0,::2], body_z[2,::2])
     plt.gca().set_aspect('equal')
     plt.xlim((-2, 8))
     plt.ylim((-5, 2))
@@ -68,6 +68,9 @@ def plot(t, X_true, ref_traj):
     plt.legend(loc='upper left')
 
     plt.figure(2)
-    plt.plot(t, load_angle)
+    plt.plot(t, np.rad2deg(load_angle))
+    plt.grid(True)
+    plt.xlabel('Time [s]')
+    plt.ylabel('Load angle [deg]')
 
     plt.show()

@@ -1,6 +1,6 @@
 from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver
 from model import export_model
-from traj_gen import matty_loop, generate_vertical_circle
+from traj_gen import matty_flip, generate_vertical_circle
 from plotting import plot
 import numpy as np
 import scipy.linalg
@@ -17,8 +17,8 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
 
     nx = model.x.rows()
     nu = model.u.rows()
-    ny = 3
-    ny_e = 3
+    ny = 4
+    ny_e = 4
 
     ocp.dims.N = N_horizon
 
@@ -27,7 +27,7 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.cost.cost_type_e = 'NONLINEAR_LS'
 
     # Q_mat = np.diag([400, 2, 150])
-    Q_mat = np.diag([160000, 0.0001, 120000])
+    Q_mat = np.diag([160000, 100, 120000, 12000])
     # R_mat = np.diag([0.2, 0.2, 0.2, 0.2])
 
     # ocp.cost.W = scipy.linalg.block_diag(Q_mat, R_mat)
@@ -45,10 +45,10 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.constraints.idxbu = np.array([0, 1, 2, 3])
 
     # set nonlinear constraints
-    # ocp.constraints.lh = np.array([-1.39])
-    # ocp.constraints.lh_e = np.array([-1.39])
-    # ocp.constraints.uh = np.array([1.39])
-    # ocp.constraints.uh_e = np.array([1.39])
+    # ocp.constraints.lh = np.array([0])
+    # ocp.constraints.lh_e = np.array([0])
+    # ocp.constraints.uh = np.array([0.78])
+    # ocp.constraints.uh_e = np.array([0.78])
 
     # # slack variable configuration:
     # nh = 1
@@ -69,7 +69,7 @@ def setup(x0, Fmax, N_horizon, Tf, RTI=False):
     ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
     ocp.solver_options.integrator_type = 'IRK'
     ocp.solver_options.sim_method_newton_iter = 10
-    ocp.solver_options.levenberg_marquardt = 14.5
+    ocp.solver_options.levenberg_marquardt = 4.5
 
     if RTI:
         ocp.solver_options.nlp_solver_type = 'SQP_RTI'
@@ -102,13 +102,16 @@ def main(use_RTI=False):
 
     ocp_solver, integrator = setup(x0, Fmax, N_horizon, Tf, use_RTI)
 
+    # ocp_solver.options_set('print_level', 1)
+
     nx = ocp_solver.acados_ocp.dims.nx
     nu = ocp_solver.acados_ocp.dims.nu
 
     # set up reference trajectory
     # ref_traj = np.zeros((3,Nsim+N_horizon))
-    # circle_traj = generate_vertical_circle([0,0,1.5], 0, 1.5, 4.5, np.pi/2, -3/2*np.pi, Tf/N_horizon)
-    ref_traj = matty_loop(1,4,1.5,Tf/N_horizon)
+    # ref_traj = generate_vertical_circle([0,0,1.5], 0, 1.5, 4.5, np.pi/2, -3/2*np.pi, Tf/N_horizon)
+    ref_traj = matty_flip(1,5.5,2,Tf/N_horizon)
+    ref_traj = np.vstack([ref_traj, np.zeros((1,np.size(ref_traj, 1)))])
     # ref_traj[:,:min(Nsim, circle_traj.shape[1])] = circle_traj[:,:min(Nsim, circle_traj.shape[1])]
     # ref_traj[0:2:, :] = np.vstack([np.linspace(0,3,Nsim+N_horizon), np.linspace(0,3,Nsim+N_horizon)])
 
@@ -148,7 +151,7 @@ def main(use_RTI=False):
                 yref = ref_traj[:,i+j]
                 ocp_solver.set(j, "yref", yref)
 
-            yref_N = ref_traj[0:nx,i+j] # only states
+            yref_N = ref_traj[:,i+j] # only states
             ocp_solver.cost_set(N_horizon, 'yref', yref_N)
 
             # feedback phase

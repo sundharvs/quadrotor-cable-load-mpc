@@ -74,8 +74,8 @@ def export_model() -> AcadosModel:
     model.xdot = xdot
     model.u = u
     model.name = model_name
-    model.cost_y_expr = pQ
-    model.cost_y_expr_e = pQ
+    model.cost_y_expr = ca.vertcat(pQ,load_angle)
+    model.cost_y_expr_e = ca.vertcat(pQ,load_angle)
     # model.con_h_expr = load_angle
     # model.con_h_expr_e = load_angle
 

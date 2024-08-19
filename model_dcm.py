@@ -45,11 +45,12 @@ def export_model() -> AcadosModel:
     skew_omega[2, 0] = -omega[1]
     skew_omega[2, 1] = omega[0]
 
-    Rdot = ca.reshape(ca.reshape(R,(3,3)) @ skew_omega, (9,1))
+    DCM = ca.reshape(R,(3,3))
+
+    Rdot = ca.reshape(DCM @ skew_omega, (9,1))
     omegaDot = 1./params.J * ( Torque - ca.cross(omega, params.J * omega) )
     
     #load attitude dynamics
-    DCM = ca.reshape(R,(3,3))
     qdot = d_q
     d_qdot = (1/(params.mQ*params.l)) * (  ca.cross(q, ca.cross(q,DCM@Thrust)) - params.mQ*params.l*ca.dot(d_q,d_q)@q )
     
@@ -67,6 +68,10 @@ def export_model() -> AcadosModel:
     pQ = pL - params.l * q
     vQ = vL - params.l * ca.cross(w,q)
 
+    # model nonlinear constraint (load angle)
+    body_z_negative = -1*DCM[:,2]
+    load_angle = ca.acos(ca.dot(q,body_z_negative)/(ca.norm_2(body_z_negative)*ca.norm_2(q)))
+
     model = AcadosModel()
 
     model.f_impl_expr = f_impl
@@ -75,8 +80,8 @@ def export_model() -> AcadosModel:
     model.xdot = xdot
     model.u = u
     model.name = model_name
-    model.cost_y_expr = pQ
-    model.cost_y_expr_e = pQ
+    model.cost_y_expr = ca.vertcat(pQ, load_angle)
+    model.cost_y_expr_e = ca.vertcat(pQ, load_angle)
 
     # store meta information
     # model.x_labels = ['$x$ [m]', r'$\theta$ [rad]', '$v$ [m]', r'$\dot{\theta}$ [rad/s]']

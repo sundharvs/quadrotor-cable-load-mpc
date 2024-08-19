@@ -37,7 +37,7 @@ tolerance = 0.1
 plot = True 
 
 initialState = np.array([-0.01, 0, -0.3, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-# initialStateDCM = np.array([-0.01, 0, -0.3, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+initialStateDCM = np.array([-0.01, 0, -0.3, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
 
 # sets initial load position to be l (cable length) away from quadrotor
